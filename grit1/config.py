@@ -34,6 +34,11 @@ class ProjectConfig:
     epsilon_min: float
     epsilon_max: float
     tau_epsilon: float
+    use_curvature: bool
+    curvature_mode: str
+    central_fd_radius: float
+    central_fd_normalize_direction: bool
+    hvp_last_linear_layers: int
 
 
 def _required(mapping: dict[str, Any], key: str) -> Any:
@@ -88,4 +93,11 @@ def load_project_config(path: str | Path, profile_name: str) -> ProjectConfig:
         epsilon_min=float(competence.get("epsilon_min", 0.05)),
         epsilon_max=float(competence.get("epsilon_max", 0.05)),
         tau_epsilon=float(competence.get("tau_epsilon", 1.0)),
+        use_curvature=bool(update.get("use_curvature", False)),
+        curvature_mode=str(update.get("curvature_mode", "central_fd")),
+        central_fd_radius=float(update.get("central_fd_radius", 0.05)),
+        central_fd_normalize_direction=bool(
+            update.get("central_fd_normalize_direction", True)
+        ),
+        hvp_last_linear_layers=int(update.get("hvp_last_linear_layers", 1)),
     )

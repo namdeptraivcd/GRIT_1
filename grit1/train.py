@@ -285,7 +285,9 @@ def main() -> None:
         model_path, trust_remote_code=True, torch_dtype=dtype
     ).to(device)
     if args.gradient_checkpointing:
-        policy.gradient_checkpointing_enable()
+        policy.gradient_checkpointing_enable(
+            gradient_checkpointing_kwargs={"use_reentrant": False}
+        )
         policy.config.use_cache = False
     policy.train()
 
