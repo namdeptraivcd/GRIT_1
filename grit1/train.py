@@ -408,6 +408,7 @@ def main() -> None:
             module_pattern=cfg.module_pattern,
             missing="identity",
         )
+        del task_gradients, gated_gradients
         projection_metrics["kappa"] = mean_kappa
 
         preservation_metrics = {"preservation_kl": 0.0, "violation_fraction": 0.0}
@@ -498,6 +499,7 @@ def main() -> None:
                     "central_fd_projected_vector_norm": curvature_result.projected_vector_norm,
                     "central_fd_hvp_skipped": float(curvature_result.skipped_hvp),
                 }
+                del curvature_result
 
         combined = {
             name: projected_gradients[name] + lambda_pres * preservation_correction[name]
@@ -507,8 +509,10 @@ def main() -> None:
         optimizer.zero_grad(set_to_none=True)
         for name, parameter in parameters:
             parameter.grad = combined[name].to(parameter)
+        del projected_gradients, preservation_gradients, preservation_correction, combined
         grad_norm = torch.nn.utils.clip_grad_norm_(policy.parameters(), args.gradient_clip)
         optimizer.step()
+        optimizer.zero_grad(set_to_none=True)
         completed += 1
 
         metrics = {
