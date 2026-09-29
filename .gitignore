@@ -203,6 +203,13 @@ cython_debug/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
+# GRIT runtime artifacts
+.DS_Store
+data/
+artifacts/
+checkpoints/
+logs/
+
 # Ruff stuff:
 .ruff_cache/
 

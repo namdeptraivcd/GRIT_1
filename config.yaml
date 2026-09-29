@@ -1,0 +1,111 @@
+# GRIT_1 configuration.
+# The existing GRIT sections below are kept compatible with
+# GRIT/config/method/grit.yaml. New GRIT_1 techniques are opt-in.
+
+method: grit
+
+# Model ladder used for experiments, from smoke test to the main study.
+# policy_model and base_model must stay identical within one profile.
+model_profiles:
+  smoke_0_5b:
+    policy_model: Qwen/Qwen2.5-0.5B-Instruct
+    base_model: Qwen/Qwen2.5-0.5B-Instruct
+    safety_model: Qwen/Qwen3Guard-Gen-0.6B
+    prm_model: null
+    purpose: pipeline_and_projection_smoke
+
+  small_0_6b:
+    policy_model: Qwen/Qwen3-0.6B
+    base_model: Qwen/Qwen3-0.6B
+    safety_model: Qwen/Qwen3Guard-Gen-0.6B
+    prm_model: Qwen/Qwen3Guard-Stream-0.6B
+    purpose: first_grit1_ablation
+
+  medium_1_7b:
+    policy_model: Qwen/Qwen3-1.7B
+    base_model: Qwen/Qwen3-1.7B
+    safety_model: Qwen/Qwen3Guard-Gen-4B
+    prm_model: Qwen/Qwen3Guard-Stream-4B
+    purpose: cross_domain_validation
+
+  large_7b:
+    policy_model: Qwen/Qwen2.5-7B-Instruct
+    base_model: Qwen/Qwen2.5-7B-Instruct
+    safety_model: Qwen/Qwen3Guard-Gen-4B
+    prm_model: Qwen/Qwen3Guard-Stream-4B
+    purpose: primary_safety_forgetting_study
+
+projectors:
+  path: artifacts/projectors.pt
+  module_pattern: mlp
+  missing: identity
+
+update:
+  learning_rate: 1.0e-6
+  lambda_pres: 1.0
+  use_curvature: true
+  curvature_mode: central_fd
+  central_fd_radius: 0.05
+  central_fd_normalize_direction: true
+  hvp_last_linear_layers: 1
+
+preservation:
+  enable: false
+  dataset_path: null
+  micro_batch_size: null
+  base_model_path: null
+  base_model_dtype: null
+  trust_remote_code: false
+  epsilon_pres: 0.05
+  top_k: 64
+  default_probability: 1.0e-12
+  reduction: seq-mean-token-mean
+  anchor: frozen_base_policy
+
+logging:
+  projector_rank_nullity: true
+  kl_violation_fraction: true
+  preservation_loss: true
+  hvp_skipped: true
+
+ablations:
+  gradient_projection_only:
+    lambda_pres: 0.0
+    use_curvature: false
+  first_order_grit:
+    lambda_pres: 1.0
+    use_curvature: false
+  curvature_grit:
+    lambda_pres: 1.0
+    use_curvature: true
+
+# GRIT_1 additions. Keep disabled to preserve the original GRIT behavior.
+techniques:
+  process_shaped_credit:
+    enable: false
+    prm_model_path: Qwen/Qwen3Guard-Stream-4B
+    prm_trust_remote_code: true
+    score_mode: prefix_token_safety
+    discount: 1.0
+    terminal_potential: 0.0
+    require_preservation_domain_coverage: true
+
+  process_gated_soft_projection:
+    enable: false
+    kappa_max: 0.2
+    tau_kappa: 0.1
+
+  competence_gated_trust_region:
+    enable: false
+    epsilon_min: 0.02
+    epsilon_max: 0.08
+    tau_epsilon: 0.1
+    out_of_domain_fallback: epsilon_min
+
+diagnostics:
+  post_projection_snr: true
+  projected_gradient_ratio: true
+  shuffled_prm_control: false
+  correction_firing_rate: true
+  task_accuracy: true
+  preservation_accuracy_vs_base: true
